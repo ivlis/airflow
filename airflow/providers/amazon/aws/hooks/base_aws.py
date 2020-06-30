@@ -114,7 +114,7 @@ class AwsBaseHook(BaseHook):
 
                 elif "s3_config_file" in extra_config:
                     creds_from = "extra_config['s3_config_file']"
-                    aws_access_key_id, aws_secret_access_key = _parse_s3_config(
+                    aws_access_key_id, aws_secret_access_key, aws_session_token = _parse_s3_config(
                         extra_config["s3_config_file"],
                         extra_config.get("s3_config_format"),
                         extra_config.get("profile"),
@@ -464,10 +464,11 @@ def _parse_s3_config(config_file_name, config_format="boto", profile=None):
     if conf_format in ("boto", "aws"):  # pragma: no cover
         key_id_option = "aws_access_key_id"
         secret_key_option = "aws_secret_access_key"
-        # security_token_option = 'aws_security_token'
+        security_token_option = 'aws_session_token'
     else:
         key_id_option = "access_key"
         secret_key_option = "secret_key"
+        security_token_option = 'access_token'
     # Actual Parsing
     if cred_section not in sections:
         raise AirflowException("This config file format is not recognized")
@@ -475,7 +476,8 @@ def _parse_s3_config(config_file_name, config_format="boto", profile=None):
         try:
             access_key = config.get(cred_section, key_id_option)
             secret_key = config.get(cred_section, secret_key_option)
+            security_token = config.get(cred_section, security_token_option)
         except Exception:
             logging.warning("Option Error in parsing s3 config file")
             raise
-        return access_key, secret_key
+        return access_key, secret_key, security_token
